@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastermind Game</title>
+    <link rel="stylesheet" href="assets/css/MasterMind.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Jeu de Mastermind</h1>
+        <label for="niveau">Choisissez un niveau :</label>
+        <select id="niveau">
+            <option value="4">Facile (4 chiffres)</option>
+            <option value="6">Difficile (6 chiffres)</option>
+        </select>
+        <button onclick="mastermind()">Commencer le jeu</button>
+        <h2>Résultat final :</h2>
+        <div id="resultats"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function mastermind() {
+            const niveau = parseInt(document.getElementById('niveau').value);
+            const code = Array.from({ length: niveau }, () => Math.floor(Math.random() * 6) + 1);
+            let essais = 10;
+            let historique = "";
+            await Swal.fire("Bienvenue dans le jeu Mastermind !", `Trouvez la combinaison de ${niveau} chiffres (de 1 à 6). Vous avez 10 essais.`, "info");
+            document.getElementById('resultats').innerHTML = "";
+            while (essais > 0) {
+                let proposition = prompt(`Il vous reste ${essais} essais.\nEntrez ${niveau} chiffres entre 1 et 6 (ou appuyez sur Échap pour quitter) :`);
+                if (proposition === null) {
+                    await Swal.fire("Fin du jeu", "Vous avez quitté le jeu. À bientôt !", "warning");
+                    return;
+                }
+                if (!new RegExp(`^[1-6]{${niveau}}$`).test(proposition)) {
+                    await Swal.fire("Erreur", `Veuillez entrer exactement ${niveau} chiffres entre 1 et 6.`, "error");
+                    continue;
+                }
+                const tentative = proposition.split('').map(Number);
+                let bienPlaces = 0, malPlaces = 0;
+                const codeRestant = [], tentativeRestante = [];
+                for (let i = 0; i < niveau; i++) {
+                    if (tentative[i] === code[i]) bienPlaces++;
+                    else {
+                        codeRestant.push(code[i]);
+                        tentativeRestante.push(tentative[i]);
+                    }
+                }
+                for (let i = 0; i < tentativeRestante.length; i++) {
+                    const index = codeRestant.indexOf(tentativeRestante[i]);
+                    if (index !== -1) {
+                        malPlaces++;
+                        codeRestant.splice(index, 1);
+                    }
+                }
+                historique += `Tentative ${11 - essais} : ${proposition} → Bien placés: ${bienPlaces}, Mal placés: ${malPlaces}\n`;
+                await Swal.fire("Tentative en cours", historique, "info");
+                if (bienPlaces === niveau) {
+                    document.getElementById('resultats').innerHTML = `Bravo ! Vous avez trouvé le code ${code.join('')} en ${11 - essais} essais.`;
+                    await Swal.fire("Bravo !", `Vous avez trouvé le code ${code.join('')} en ${11 - essais} essais.`, "success");
+                    return;
+                }
+                essais--;
+            }
+            document.getElementById('resultats').innerHTML = `Dommage ! Vous avez épuisé tous vos essais. Le code correct était : ${code.join('')}`;
+            await Swal.fire("Dommage !", `Vous avez épuisé tous vos essais.\nLe code correct était : ${code.join('')}`, "error");
+        }
+    </script>
+</body>
+
+</html>
